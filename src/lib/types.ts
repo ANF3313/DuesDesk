@@ -6,6 +6,9 @@ export type Org = {
   currency: string;
   stripe_account_id: string | null;
   charges_enabled: boolean;
+  late_fee_cents: number;
+  late_fee_grace_days: number;
+  last_digest_on: string | null;
   created_at: string;
 };
 

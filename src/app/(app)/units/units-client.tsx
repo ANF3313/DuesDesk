@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input, MoneyInput } from "@/components/ui/field";
+import { Input, MoneyInput, TextArea } from "@/components/ui/field";
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { Table, Td, Th } from "@/components/ui/table";
@@ -20,7 +20,122 @@ import {
   IconPlus,
   IconTrash,
 } from "@/components/ui/icons";
-import { createUnit, deleteUnit, resetPayLink, updateUnit } from "./actions";
+import {
+  createUnit,
+  deleteUnit,
+  importUnits,
+  resetPayLink,
+  updateUnit,
+  type ImportRow,
+} from "./actions";
+
+function parseSpreadsheetText(text: string): ImportRow[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const rows: ImportRow[] = [];
+  for (const line of lines) {
+    const delim = line.includes("\t") ? "\t" : line.includes(";") ? ";" : ",";
+    const cells = line
+      .split(delim)
+      .map((c) => c.trim().replace(/^"(.*)"$/, "$1").trim());
+    if (cells.length < 4) continue;
+    // Skip a header row (its email column won't contain @).
+    if (!cells[2].includes("@")) continue;
+    rows.push({ label: cells[0], name: cells[1], email: cells[2], dues: cells[3] });
+  }
+  return rows;
+}
+
+function ImportModal({ onClose }: { onClose: () => void }) {
+  const { toast } = useToast();
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [skipped, setSkipped] = useState<string[]>([]);
+  const [pending, startTransition] = useTransition();
+  const rows = parseSpreadsheetText(text);
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Import units"
+      description="Paste rows from your spreadsheet — one unit per line: unit, member name, email, dues."
+    >
+      <div className="space-y-4">
+        <TextArea
+          label="Rows"
+          name="rows"
+          rows={7}
+          placeholder={"Unit 1A, Maya Rodriguez, maya@example.com, 350\nUnit 1B, Sam Alvarez, sam@example.com, 350"}
+          hint={
+            rows.length > 0
+              ? `${rows.length} ${rows.length === 1 ? "unit" : "units"} ready to import.`
+              : "Commas, semicolons, or tabs all work. A header row is skipped automatically."
+          }
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="font-mono text-[13px]"
+        />
+        <label className="block text-[13px] text-neutral-600">
+          Or pick a .csv file:{" "}
+          <input
+            type="file"
+            accept=".csv,.txt,.tsv"
+            className="mt-1 block text-[13px] file:mr-3 file:rounded-md file:border file:border-neutral-300 file:bg-white file:px-3 file:py-1.5 file:text-[13px] file:font-medium file:text-neutral-700 hover:file:bg-neutral-50"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const reader = new FileReader();
+              reader.onload = () => setText(String(reader.result ?? ""));
+              reader.readAsText(f);
+            }}
+          />
+        </label>
+        {error && (
+          <p role="alert" className="rounded-md bg-overdue-bg px-3 py-2 text-[13px] text-overdue-fg">
+            {error}
+          </p>
+        )}
+        {skipped.length > 0 && (
+          <div className="max-h-32 overflow-y-auto rounded-md bg-pending-bg px-3 py-2 text-[13px] text-pending-fg">
+            <p className="font-medium">Skipped:</p>
+            {skipped.map((s, i) => (
+              <p key={i}>{s}</p>
+            ))}
+          </div>
+        )}
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            disabled={rows.length === 0}
+            loading={pending}
+            onClick={() =>
+              startTransition(async () => {
+                setError(null);
+                const res = await importUnits(rows);
+                if (res.formError) {
+                  setError(res.formError);
+                  return;
+                }
+                setSkipped(res.skipped ?? []);
+                toast({ title: res.success ?? "Import finished" });
+                if (!res.skipped || res.skipped.length === 0) onClose();
+                else setText("");
+              })
+            }
+          >
+            Import {rows.length > 0 ? rows.length : ""} units
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
 
 export type UnitBalance = { cents: number; overdue: boolean };
 
@@ -234,6 +349,7 @@ export function UnitsClient({
     | { kind: "create" }
     | { kind: "edit"; unit: Unit }
     | { kind: "delete"; unit: Unit }
+    | { kind: "import" }
     | null
   >(null);
 
@@ -250,10 +366,15 @@ export function UnitsClient({
   }
 
   const addButton = (
-    <Button onClick={() => setModal({ kind: "create" })}>
-      <IconPlus width={16} height={16} />
-      Add unit
-    </Button>
+    <span className="flex gap-2">
+      <Button variant="secondary" onClick={() => setModal({ kind: "import" })}>
+        Import CSV
+      </Button>
+      <Button onClick={() => setModal({ kind: "create" })}>
+        <IconPlus width={16} height={16} />
+        Add unit
+      </Button>
+    </span>
   );
 
   return (
@@ -359,6 +480,7 @@ export function UnitsClient({
       {modal?.kind === "delete" && (
         <DeleteUnitModal unit={modal.unit} onClose={() => setModal(null)} />
       )}
+      {modal?.kind === "import" && <ImportModal onClose={() => setModal(null)} />}
     </div>
   );
 }

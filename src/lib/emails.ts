@@ -119,6 +119,44 @@ export async function sendPaymentIssueEmail(opts: {
   });
 }
 
+/** First-of-month summary to org staff: collected, outstanding, who's behind. */
+export async function sendBoardDigestEmail(opts: {
+  to: string[];
+  orgName: string;
+  monthLabel: string;
+  collectedCents: number;
+  outstandingCents: number;
+  overdueLines: Array<{ label: string; memo: string; amountCents: number }>;
+}) {
+  const overdueHtml =
+    opts.overdueLines.length === 0
+      ? `<p style="font-size:14px;color:#167647;margin:12px 0 0;">Nothing overdue. Enjoy the quiet.</p>`
+      : `<p style="font-size:13px;font-weight:600;color:#171613;margin:16px 0 6px;">Overdue right now</p>` +
+        opts.overdueLines
+          .map(
+            (l) =>
+              `<p style="font-size:13px;color:#52514a;margin:2px 0;">${esc(l.label)} — ${esc(l.memo)}: <strong style="color:#b42318;">${formatCents(l.amountCents)}</strong></p>`,
+          )
+          .join("");
+
+  for (const to of opts.to) {
+    await getResend().emails.send({
+      from: from(),
+      to,
+      subject: `${opts.orgName}: your ${opts.monthLabel} summary`,
+      html: shell(
+        `Your ${esc(opts.monthLabel)} summary`,
+        `${amountRow("Collected in " + esc(opts.monthLabel), formatCents(opts.collectedCents))}
+         ${amountRow("Still outstanding", formatCents(opts.outstandingCents))}
+         ${overdueHtml}
+         <p style="font-size:12px;color:#8a897f;margin:20px 0 0;">Sent automatically on the 1st of each month.</p>`,
+        opts.orgName,
+      ),
+      text: `${opts.orgName} — ${opts.monthLabel} summary\nCollected: ${formatCents(opts.collectedCents)}\nOutstanding: ${formatCents(opts.outstandingCents)}\nOverdue items: ${opts.overdueLines.length}`,
+    });
+  }
+}
+
 export async function sendTeamInviteEmail(opts: {
   to: string;
   inviteeName: string;

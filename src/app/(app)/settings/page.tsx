@@ -66,6 +66,8 @@ export default async function SettingsPage() {
         invites={invites}
         currentUserId={user.id}
         baseUrl={appUrl()}
+        lateFeeCents={org.late_fee_cents ?? 0}
+        graceDays={org.late_fee_grace_days ?? 5}
       />
     </div>
   );

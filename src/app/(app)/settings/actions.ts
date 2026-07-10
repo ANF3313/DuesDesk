@@ -158,6 +158,39 @@ export async function inviteTeamMember(
   return { success: `Invite sent to ${parsed.data.email}` };
 }
 
+export async function updateLateFee(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const raw = String(formData.get("amount") ?? "").trim();
+  const daysRaw = Number(formData.get("graceDays") ?? 5);
+
+  let cents = 0;
+  if (raw !== "" && raw !== "0") {
+    const { parseMoneyInput } = await import("@/lib/money");
+    const parsed = parseMoneyInput(raw);
+    if (parsed === null) {
+      return { fieldErrors: { amount: "Enter an amount like 25, or leave empty to turn late fees off" } };
+    }
+    cents = parsed;
+  }
+  if (!Number.isInteger(daysRaw) || daysRaw < 0 || daysRaw > 90) {
+    return { fieldErrors: { graceDays: "Grace period must be 0–90 days" } };
+  }
+
+  const { supabase, orgId } = await requireOrg();
+  const { error } = await supabase
+    .from("orgs")
+    .update({ late_fee_cents: cents, late_fee_grace_days: daysRaw })
+    .eq("id", orgId);
+  if (error) return { formError: "The late fee couldn't be saved. Give it another try." };
+
+  revalidatePath("/settings");
+  return {
+    success: cents === 0 ? "Late fees turned off" : "Late fee saved",
+  };
+}
+
 export async function revokeInvite(inviteId: string): Promise<ActionState> {
   const { supabase } = await requireOrg();
   const { error } = await supabase.from("invites").delete().eq("id", inviteId);

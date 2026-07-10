@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useTransition } from "react";
 import { OK, type ActionState } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/field";
+import { Input, MoneyInput } from "@/components/ui/field";
 import { StatusPill } from "@/components/ui/status-pill";
 import { useToast } from "@/components/ui/toast";
 import { IconLink, IconShield, IconTrash } from "@/components/ui/icons";
@@ -13,6 +13,7 @@ import {
   inviteTeamMember,
   removeTeamMember,
   revokeInvite,
+  updateLateFee,
   updateOrgName,
 } from "./actions";
 
@@ -285,6 +286,59 @@ function TeamCard({
   );
 }
 
+function LateFeeCard({
+  lateFeeCents,
+  graceDays,
+}: {
+  lateFeeCents: number;
+  graceDays: number;
+}) {
+  const { toast } = useToast();
+  const [state, formAction, pending] = useActionState(updateLateFee, OK);
+
+  useEffect(() => {
+    if (state.success) toast({ title: state.success });
+    if (state.formError) toast({ title: state.formError, kind: "error" });
+  }, [state, toast]);
+
+  return (
+    <Card>
+      <CardHeader
+        title="Late fees"
+        description={
+          lateFeeCents > 0
+            ? `Currently on: a fee is billed automatically once an invoice is ${graceDays} ${graceDays === 1 ? "day" : "days"} past due.`
+            : "Off. Set an amount and overdue invoices get a late-fee invoice automatically — you never have to be the bad guy."
+        }
+      />
+      <CardBody>
+        <form action={formAction} noValidate className="grid max-w-md gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <MoneyInput
+            label="Fee amount"
+            name="amount"
+            placeholder="25.00"
+            defaultValue={lateFeeCents > 0 ? (lateFeeCents / 100).toFixed(2) : ""}
+            hint="Leave empty to turn off."
+            error={state.fieldErrors?.amount}
+          />
+          <Input
+            label="Grace period (days)"
+            name="graceDays"
+            type="number"
+            min={0}
+            max={90}
+            defaultValue={graceDays}
+            error={state.fieldErrors?.graceDays}
+          />
+          <Button type="submit" variant="secondary" loading={pending} className="sm:mb-6">
+            Save
+          </Button>
+        </form>
+      </CardBody>
+    </Card>
+  );
+}
+
 export function SettingsClient({
   orgName,
   stripeStatus,
@@ -292,6 +346,8 @@ export function SettingsClient({
   invites,
   currentUserId,
   baseUrl,
+  lateFeeCents,
+  graceDays,
 }: {
   orgName: string;
   stripeStatus: StripeStatus;
@@ -299,6 +355,8 @@ export function SettingsClient({
   invites: PendingInvite[];
   currentUserId: string;
   baseUrl: string;
+  lateFeeCents: number;
+  graceDays: number;
 }) {
   return (
     <div className="space-y-5">
@@ -309,6 +367,7 @@ export function SettingsClient({
         currentUserId={currentUserId}
         baseUrl={baseUrl}
       />
+      <LateFeeCard lateFeeCents={lateFeeCents} graceDays={graceDays} />
       <OrgNameCard orgName={orgName} />
       <Card>
         <CardBody className="flex items-start gap-3">
