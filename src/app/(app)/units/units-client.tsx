@@ -411,7 +411,12 @@ export function UnitsClient({
               <tbody>
                 {units.map((unit) => (
                   <tr key={unit.id} className="transition-colors hover:bg-neutral-50">
-                    <Td className="font-medium text-neutral-950">{unit.label}</Td>
+                    <Td className="font-medium text-neutral-950">
+                      {unit.label}
+                      {unit.autopay_enabled && (
+                        <StatusPill kind="processing" label="Autopay" className="ml-2" />
+                      )}
+                    </Td>
                     <Td>
                       <span className="block text-neutral-950">{unit.member_name}</span>
                       <span className="block text-[13px] text-neutral-500">
@@ -445,7 +450,12 @@ export function UnitsClient({
                 <Card className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-medium text-neutral-950">{unit.label}</p>
+                      <p className="font-medium text-neutral-950">
+                        {unit.label}
+                        {unit.autopay_enabled && (
+                          <StatusPill kind="processing" label="Autopay" className="ml-2" />
+                        )}
+                      </p>
                       <p className="mt-0.5 truncate text-[13px] text-neutral-500">
                         {unit.member_name} · {unit.member_email}
                       </p>

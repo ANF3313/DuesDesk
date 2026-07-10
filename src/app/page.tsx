@@ -101,7 +101,7 @@ const FEATURES = [
   {
     icon: IconRefresh,
     title: "Dues on autopilot",
-    body: "Set the amount and cadence once. Invoices create themselves, email themselves, and chase themselves.",
+    body: "Set the amount and cadence once. Invoices create themselves, chase themselves — and with autopay, they even pay themselves.",
   },
   {
     icon: IconLink,
@@ -126,7 +126,7 @@ const FEATURES = [
   {
     icon: IconBuilding,
     title: "Built for under 50 units",
-    body: "Self-managed HOAs, condo boards, and small landlords — the tools you need without the property-manager bloat.",
+    body: "Dues, expenses, and annual-meeting reports for self-managed HOAs and small landlords — without the property-manager bloat.",
   },
 ];
 
@@ -135,7 +135,7 @@ const TIERS = [
     name: "Solo",
     price: "$19",
     blurb: "For landlords with a handful of doors.",
-    features: ["Up to 10 units", "Recurring + one-time dues", "Card and bank (ACH) payments", "Member pay links"],
+    features: ["Up to 10 units", "Recurring dues + member autopay", "Card and bank (ACH) payments", "Expense tracking and reports"],
     featured: false,
   },
   {
@@ -194,7 +194,7 @@ const FAQS = [
   },
   {
     q: "What about members who pay by check?",
-    a: "Online payment is optional for members. Invoices still track what's owed, and you can void or adjust an invoice when someone settles offline. Full offline-payment recording is on the roadmap.",
+    a: "Online payment is optional for members. When a check or cash arrives, mark the invoice paid in one click — it's recorded as an offline payment and your reports stay accurate.",
   },
   {
     q: "Is our data separated from other organizations?",

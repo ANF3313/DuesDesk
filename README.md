@@ -1,9 +1,17 @@
 # DuesDesk
 
 Dues collection and communication for self-managed HOAs and small landlords.
-Members get a private link, pay by card or bank transfer, and invoices mark
-themselves paid. Money settles directly to the organization's own bank account
-via Stripe Connect — DuesDesk never holds funds.
+Members get a private link, pay by card or bank transfer (or enroll in
+autopay), and invoices mark themselves paid. Money settles directly to the
+organization's own bank account via Stripe Connect — DuesDesk never holds
+funds. Also included: team invites, automatic overdue reminders, late fees,
+offline-payment recording, expense tracking, yearly reports with CSV/PDF
+export, CSV unit import, announcements, and a monthly board digest.
+
+Schema changes live in `supabase/` — run `schema.sql` once, then each
+`upgrade-XX-*.sql` in order in the Supabase SQL editor. The autopay upgrade
+also needs `payment_intent.succeeded` and `payment_intent.payment_failed`
+added to the Stripe webhook's events.
 
 **Stack:** Next.js (App Router) · TypeScript · Supabase (Postgres + auth, RLS) ·
 Stripe Connect · Resend · Tailwind CSS v4 · Vercel
