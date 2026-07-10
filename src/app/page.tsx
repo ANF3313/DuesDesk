@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -182,6 +185,12 @@ const FAQS = [
 ];
 
 export default function LandingPage() {
+  // Drop a real capture at public/screenshots/dashboard.png and the
+  // product-proof section swaps to it automatically on the next deploy.
+  const hasScreenshot = existsSync(
+    join(process.cwd(), "public", "screenshots", "dashboard.png"),
+  );
+
   return (
     <div className="bg-neutral-25">
       <Header />
@@ -380,7 +389,17 @@ export default function LandingPage() {
           </div>
           <div className="mx-auto mt-10 max-w-3xl">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 md:p-4">
-              <DashboardMock />
+              {hasScreenshot ? (
+                <Image
+                  src="/screenshots/dashboard.png"
+                  alt="The DuesDesk dashboard: collected and outstanding totals, and every invoice's payment status at a glance"
+                  width={1600}
+                  height={900}
+                  className="h-auto w-full rounded-lg border border-neutral-200"
+                />
+              ) : (
+                <DashboardMock />
+              )}
             </div>
             <p className="mt-3 text-center text-[13px] text-neutral-500">
               The dues dashboard · DuesDesk is in pilot testing now — early-access
