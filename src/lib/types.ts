@@ -77,6 +77,19 @@ export type Payment = {
   settled_at: string | null;
 };
 
+export type Expense = {
+  id: string;
+  org_id: string;
+  amount_cents: number;
+  currency: string;
+  category: string;
+  memo: string;
+  vendor: string | null;
+  spent_on: string;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type Announcement = {
   id: string;
   org_id: string;

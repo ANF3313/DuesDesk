@@ -122,6 +122,26 @@ export const IconShield = (p: SVGProps<SVGSVGElement>) => (
     <path d="M9 12l2 2 4-4" />
   </Svg>
 );
+export const IconWallet = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <rect x="3" y="6" width="18" height="13" rx="2" />
+    <path d="M3 10h18M15 14.5h2.5" />
+  </Svg>
+);
+export const IconChart = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M5 20v-8M11 20V5M17 20v-11M3 20h18" />
+  </Svg>
+);
+export const IconDownload = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}><path d="M12 4v11M7 10l5 5 5-5M4 20h16" /></Svg>
+);
+export const IconPrinter = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M7 8V4h10v4M7 17H4a1 1 0 01-1-1v-6a1 1 0 011-1h16a1 1 0 011 1v6a1 1 0 01-1 1h-3" />
+    <rect x="7" y="14" width="10" height="6" rx="1" />
+  </Svg>
+);
 export const IconSpinner = (p: SVGProps<SVGSVGElement>) => (
   <Svg {...p} className={`animate-spin ${p.className ?? ""}`}>
     <path d="M12 3a9 9 0 109 9" />

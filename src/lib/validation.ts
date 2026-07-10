@@ -97,6 +97,25 @@ export const scheduleSchema = z.object({
   firstInvoiceDate: isoDate,
 });
 
+export const expenseSchema = z.object({
+  amountCents: z
+    .number({ message: "Enter an amount like 120 or 120.50" })
+    .int()
+    .positive("The amount must be more than $0")
+    .max(10_000_000, "That's above the $100,000 limit — double-check the amount"),
+  category: z.enum(
+    ["maintenance", "utilities", "insurance", "landscaping", "legal", "management", "reserves", "other"],
+    { message: "Pick a category" },
+  ),
+  memo: z
+    .string()
+    .trim()
+    .min(1, "What was it for? e.g. “Pool pump repair”")
+    .max(140, "Keep it under 140 characters"),
+  vendor: z.string().trim().max(120, "Keep the vendor under 120 characters"),
+  spentOn: isoDate,
+});
+
 export const announcementSchema = z.object({
   subject: z
     .string()

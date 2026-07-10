@@ -9,15 +9,19 @@ import {
   IconAnnounce,
   IconBanknote,
   IconBuilding,
+  IconChart,
   IconLogout,
   IconReceipt,
   IconSettings,
+  IconWallet,
 } from "./ui/icons";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: IconBanknote },
   { href: "/units", label: "Units", icon: IconBuilding },
   { href: "/invoices", label: "Invoices", icon: IconReceipt },
+  { href: "/expenses", label: "Expenses", icon: IconWallet },
+  { href: "/reports", label: "Reports", icon: IconChart },
   { href: "/announcements", label: "Announcements", icon: IconAnnounce },
   { href: "/settings", label: "Settings", icon: IconSettings },
 ];
@@ -65,7 +69,7 @@ export function AppShell({
   return (
     <div className="min-h-dvh lg:flex">
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-neutral-200 bg-white lg:flex">
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-neutral-200 bg-white print:hidden lg:flex">
         <div className="sticky top-0 flex h-dvh flex-col px-4 py-5">
           <Logo href="/dashboard" />
           <p className="mt-4 truncate rounded-md bg-neutral-50 px-3 py-2 text-[13px] font-medium text-neutral-700">
@@ -91,7 +95,7 @@ export function AppShell({
 
       {/* Mobile header */}
       <div className="min-w-0 flex-1">
-        <header className="border-b border-neutral-200 bg-white lg:hidden">
+        <header className="border-b border-neutral-200 bg-white print:hidden lg:hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <Logo href="/dashboard" />
             <form action={signOut}>
