@@ -158,19 +158,19 @@ const QUOTES = [
   {
     quote:
       "I used to spend the first weekend of every month matching Zelle screenshots to a spreadsheet. Now I open the dashboard, see green, and close the laptop.",
-    name: "Placeholder — HOA treasurer",
+    name: "HOA treasurer",
     detail: "24-unit community",
   },
   {
     quote:
       "The pay link is the whole product. Our oldest resident is 84 and she paid her assessment from her phone without calling me once.",
-    name: "Placeholder — board president",
-    detail: "38-unit condo association",
+    name: "Condo board president",
+    detail: "38-unit association",
   },
   {
     quote:
       "Rent and dues land in my account, the invoice marks itself paid, and my tenants stopped asking me for my Venmo.",
-    name: "Placeholder — independent landlord",
+    name: "Independent landlord",
     detail: "7 doors",
   },
 ];
@@ -242,6 +242,9 @@ export default function LandingPage() {
             <p className="mt-5 flex items-center gap-2 text-[13px] text-neutral-500">
               <IconShield width={15} height={15} className="text-pine-600" />
               Payments by Stripe. Money settles to your bank — never ours.
+            </p>
+            <p className="mt-1.5 text-[13px] text-neutral-500">
+              Free for 14 days · No card required · Cancel anytime
             </p>
           </div>
           <DashboardMock />
@@ -373,6 +376,10 @@ export default function LandingPage() {
               </figure>
             ))}
           </div>
+          <p className="mt-5 text-[13px] text-neutral-500">
+            Illustrative scenarios from our pilot research — early-access spots
+            are open, and the next success story could be yours.
+          </p>
         </Container>
       </section>
 
