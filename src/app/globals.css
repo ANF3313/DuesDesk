@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/*
+  DuesDesk design tokens.
+  Every color, radius, and shadow in the app resolves to a token here —
+  components never carry one-off hex values.
+*/
+@theme {
+  /* Type — wired to next/font variables set in layout.tsx */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-newsreader), ui-serif, Georgia, serif;
+
+  /* Neutrals — warm gray ramp */
+  --color-neutral-25: #fcfcfb;
+  --color-neutral-50: #f7f7f5;
+  --color-neutral-100: #f0efec;
+  --color-neutral-200: #e4e3de;
+  --color-neutral-300: #d4d3cc;
+  --color-neutral-400: #b0afa6;
+  --color-neutral-500: #8a897f;
+  --color-neutral-600: #6b6a61;
+  --color-neutral-700: #52514a;
+  --color-neutral-800: #3a3935;
+  --color-neutral-900: #262522;
+  --color-neutral-950: #171613;
+
+  /* Accent — pine green ramp. 600 is the single interactive color. */
+  --color-pine-50: #f0f5f1;
+  --color-pine-100: #dce9df;
+  --color-pine-200: #bbd4c2;
+  --color-pine-300: #8fb79b;
+  --color-pine-400: #5e9471;
+  --color-pine-500: #3d7a54;
+  --color-pine-600: #2c6446;
+  --color-pine-700: #235239;
+  --color-pine-800: #1c412e;
+  --color-pine-900: #143122;
+  --color-pine-950: #0b2018;
+
+  /* Semantic status triads — bg / border / fg, all AA-checked pairs */
+  --color-paid-bg: #eaf6ee;
+  --color-paid-border: #c5e6d1;
+  --color-paid-fg: #167647;
+
+  --color-overdue-bg: #fef3f2;
+  --color-overdue-border: #f6cbc7;
+  --color-overdue-fg: #b42318;
+
+  --color-pending-bg: #fffaeb;
+  --color-pending-border: #f2d9ab;
+  --color-pending-fg: #b54708;
+
+  --color-processing-bg: #eff4ff;
+  --color-processing-border: #c7d7fe;
+  --color-processing-fg: #175cd3;
+
+  --color-void-bg: #f7f7f5;
+  --color-void-border: #e4e3de;
+  --color-void-fg: #6b6a61;
+
+  /* Destructive actions share the overdue red family */
+  --color-danger-600: #b42318;
+  --color-danger-700: #9a1c13;
+  --color-danger-50: #fef3f2;
+
+  /* Radii */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+
+  /* Elevation — borders carry structure, shadows whisper */
+  --shadow-card: 0 1px 2px rgb(23 22 19 / 0.05);
+  --shadow-pop: 0 1px 2px rgb(23 22 19 / 0.06), 0 4px 12px rgb(23 22 19 / 0.06);
+  --shadow-modal: 0 2px 4px rgb(23 22 19 / 0.06), 0 12px 32px rgb(23 22 19 / 0.14);
+
+  /* Motion */
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-scale-in: scale-in 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-slide-up: slide-up 200ms cubic-bezier(0.32, 0.72, 0, 1);
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background-color: var(--color-neutral-25);
+    color: var(--color-neutral-950);
+  }
+  ::selection {
+    background-color: var(--color-pine-100);
+  }
+  /* Visible keyboard focus everywhere; controls refine this locally */
+  :focus-visible {
+    outline: 2px solid var(--color-pine-600);
+    outline-offset: 2px;
+  }
+}
