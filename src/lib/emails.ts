@@ -119,6 +119,27 @@ export async function sendPaymentIssueEmail(opts: {
   });
 }
 
+export async function sendTeamInviteEmail(opts: {
+  to: string;
+  inviteeName: string;
+  orgName: string;
+  inviteUrl: string;
+}) {
+  await getResend().emails.send({
+    from: from(),
+    to: opts.to,
+    subject: `You're invited to help run ${opts.orgName} on DuesDesk`,
+    html: shell(
+      `Hi ${esc(opts.inviteeName)},`,
+      `<p style="font-size:14px;color:#52514a;line-height:1.6;margin:0 0 16px;">You've been invited to join <strong>${esc(opts.orgName)}</strong> on DuesDesk — the tool it uses to collect dues and keep the books. Accept below to get access to the dashboard.</p>
+       <a href="${opts.inviteUrl}" style="display:inline-block;background:#2c6446;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:8px;margin-top:8px;">Accept invite</a>
+       <p style="font-size:12px;color:#8a897f;margin:16px 0 0;">This invite expires in 7 days. Or copy this link into your browser:<br>${opts.inviteUrl}</p>`,
+      opts.orgName,
+    ),
+    text: `Hi ${opts.inviteeName},\n\nYou've been invited to join ${opts.orgName} on DuesDesk. Accept here (expires in 7 days): ${opts.inviteUrl}`,
+  });
+}
+
 /** Announcement blast. Individually addressed — recipients never see each other. */
 export async function sendAnnouncementEmails(opts: {
   recipients: string[];

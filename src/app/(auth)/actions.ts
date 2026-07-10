@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { appUrl } from "@/lib/org";
 import {
   fieldErrorsOf,
   orgNameSchema,
@@ -32,6 +33,9 @@ export async function signUp(
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
+    // If email confirmation is on, the confirm link lands on sign-in with a
+    // "you're confirmed" banner instead of a dead end.
+    options: { emailRedirectTo: `${appUrl()}/sign-in?confirmed=1` },
   });
 
   if (error) {
@@ -91,10 +95,13 @@ export async function signIn(
     .eq("id", data.user.id)
     .maybeSingle();
 
-  // Signed in but no org yet (e.g. email confirmation was on at signup).
-  if (!profile) redirect("/onboarding");
+  const next = safeNext(formData.get("next"));
 
-  redirect(safeNext(formData.get("next")));
+  // Signed in but no org yet: honor a pending invite link, otherwise let
+  // them create their own org.
+  if (!profile) redirect(next.startsWith("/invite/") ? next : "/onboarding");
+
+  redirect(next);
 }
 
 export async function signOut(): Promise<void> {

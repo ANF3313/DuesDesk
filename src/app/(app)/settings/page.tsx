@@ -1,20 +1,38 @@
 import type { Metadata } from "next";
-import { requireOrg } from "@/lib/org";
+import { requireOrg, appUrl } from "@/lib/org";
 import { getStripe } from "@/lib/stripe";
 import type { Org } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
-import { SettingsClient, type StripeStatus } from "./settings-client";
+import {
+  SettingsClient,
+  type StripeStatus,
+  type TeamMember,
+  type PendingInvite,
+} from "./settings-client";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const { supabase, orgId } = await requireOrg();
-  const { data } = await supabase
-    .from("orgs")
-    .select("*")
-    .eq("id", orgId)
-    .single<Org>();
-  const org = data!;
+  const { supabase, user, orgId } = await requireOrg();
+
+  const [orgRes, membersRes, invitesRes] = await Promise.all([
+    supabase.from("orgs").select("*").eq("id", orgId).single<Org>(),
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, role")
+      .order("created_at"),
+    supabase
+      .from("invites")
+      .select("id, name, email, token, created_at, expires_at")
+      .is("accepted_at", null)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const org = orgRes.data!;
+  const members = (membersRes.data ?? []) as TeamMember[];
+  const invites = ((invitesRes.data ?? []) as PendingInvite[]).filter(
+    (i) => i.expires_at > new Date().toISOString(),
+  );
 
   // If onboarding was started, ask Stripe for the live status so returning
   // from onboarding flips the banner without waiting for a webhook.
@@ -41,7 +59,14 @@ export default async function SettingsPage() {
         title="Settings"
         description="Your organization and how you get paid."
       />
-      <SettingsClient orgName={org.name} stripeStatus={status} />
+      <SettingsClient
+        orgName={org.name}
+        stripeStatus={status}
+        members={members}
+        invites={invites}
+        currentUserId={user.id}
+        baseUrl={appUrl()}
+      />
     </div>
   );
 }

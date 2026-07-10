@@ -7,11 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { OK } from "@/lib/validation";
 
-export function SignInForm({ next }: { next?: string }) {
+export function SignInForm({
+  next,
+  confirmed,
+}: {
+  next?: string;
+  confirmed?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(signIn, OK);
 
   return (
     <div>
+      {confirmed && (
+        <p
+          role="status"
+          className="mb-5 rounded-md border border-paid-border bg-paid-bg px-3 py-2.5 text-[13px] text-paid-fg"
+        >
+          <strong className="font-semibold">Email confirmed.</strong> Sign in
+          below to get started.
+        </p>
+      )}
       <h1 className="text-lg font-semibold text-neutral-950">Welcome back</h1>
       <p className="mt-1 text-[13px] text-neutral-500">
         Sign in to your DuesDesk workspace.

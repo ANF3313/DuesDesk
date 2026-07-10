@@ -5,12 +5,14 @@ import { sendInvoiceEmail } from "@/lib/emails";
 import { appUrl } from "@/lib/org";
 
 /**
- * Daily (vercel.json): turns due recurring schedules into invoices and emails
- * each member their pay link.
- *
- * Safe to run any number of times: the UNIQUE (schedule_id, period) constraint
- * means a billing cycle can only ever produce one invoice, no matter how often
- * or how concurrently this runs.
+ * Daily (vercel.json). Two jobs:
+ *   1. Turn due recurring schedules into invoices and email each member their
+ *      pay link. Safe to run any number of times: the UNIQUE
+ *      (schedule_id, period) constraint means a billing cycle can only ever
+ *      produce one invoice.
+ *   2. Chase overdue invoices automatically — a reminder email when an
+ *      invoice goes past due, then every 7 days, capped at 3 total. The org
+ *      does nothing.
  */
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET;
@@ -85,5 +87,55 @@ export async function GET(req: Request) {
       .eq("id", s.id);
   }
 
-  return NextResponse.json({ created, emailed });
+  // ── Job 2: automatic overdue reminders ────────────────────────────────────
+  let reminded = 0;
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  type OverdueRow = {
+    id: string;
+    memo: string;
+    amount_cents: number;
+    due_date: string;
+    reminder_count: number;
+    last_reminded_at: string | null;
+    units: { member_name: string; member_email: string; portal_token: string } | null;
+    orgs: { name: string } | null;
+  };
+
+  const { data: overdue } = await admin
+    .from("invoices")
+    .select(
+      "id, memo, amount_cents, due_date, reminder_count, last_reminded_at, units(member_name, member_email, portal_token), orgs(name)",
+    )
+    .eq("status", "open")
+    .lt("due_date", today)
+    .lt("reminder_count", 3);
+
+  for (const inv of (overdue ?? []) as unknown as OverdueRow[]) {
+    if (inv.last_reminded_at && inv.last_reminded_at > sevenDaysAgo) continue;
+    if (!inv.units || !inv.orgs) continue;
+    try {
+      await sendInvoiceEmail({
+        to: inv.units.member_email,
+        memberName: inv.units.member_name,
+        orgName: inv.orgs.name,
+        memo: inv.memo,
+        amountCents: inv.amount_cents,
+        dueDate: inv.due_date,
+        payUrl: `${appUrl()}/pay/${inv.units.portal_token}`,
+      });
+      await admin
+        .from("invoices")
+        .update({
+          reminder_count: inv.reminder_count + 1,
+          last_reminded_at: new Date().toISOString(),
+        })
+        .eq("id", inv.id);
+      reminded++;
+    } catch {
+      // Try again on the next run.
+    }
+  }
+
+  return NextResponse.json({ created, emailed, reminded });
 }

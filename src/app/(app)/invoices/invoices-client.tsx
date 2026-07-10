@@ -21,6 +21,7 @@ import { StatusPill, invoiceKind } from "@/components/ui/status-pill";
 import { Table, Td, Th } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import {
+  IconBanknote,
   IconClock,
   IconMail,
   IconPlus,
@@ -32,6 +33,7 @@ import {
   createDues,
   deleteInvoice,
   deleteSchedule,
+  markPaidOffline,
   sendReminder,
   setScheduleActive,
   voidInvoice,
@@ -213,6 +215,7 @@ export function InvoicesClient({
   const { toast } = useToast();
   const [filter, setFilter] = useState<FilterId>("all");
   const [showNew, setShowNew] = useState(false);
+  const [markPaid, setMarkPaid] = useState<InvoiceWithUnit | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -254,6 +257,16 @@ export function InvoicesClient({
     const busy = busyId === inv.id;
     return (
       <span className="inline-flex">
+        <button
+          type="button"
+          title="Mark paid — check, cash, or other offline payment"
+          aria-label={`Mark ${inv.memo} as paid offline`}
+          disabled={busy}
+          className={iconButton}
+          onClick={() => setMarkPaid(inv)}
+        >
+          <IconBanknote width={16} height={16} />
+        </button>
         <button
           type="button"
           title="Email pay link"
@@ -476,6 +489,31 @@ export function InvoicesClient({
       )}
 
       {showNew && <NewDuesModal units={units} onClose={() => setShowNew(false)} />}
+
+      {markPaid && (
+        <Modal
+          open
+          onClose={() => setMarkPaid(null)}
+          title={`Mark “${markPaid.memo}” as paid?`}
+          description={`Records that ${markPaid.units?.label ?? "this unit"} settled ${formatCents(markPaid.amount_cents)} outside DuesDesk — by check, cash, or bank transfer. Paid invoices can't be undone or deleted.`}
+        >
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={() => setMarkPaid(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                const inv = markPaid;
+                setMarkPaid(null);
+                run(inv.id, () => markPaidOffline(inv.id));
+              }}
+            >
+              Record payment
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

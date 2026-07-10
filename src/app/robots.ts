@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: [
           "/pay/",
+          "/invite/",
           "/dashboard",
           "/units",
           "/invoices",

@@ -2,14 +2,21 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireOrg, appUrl } from "@/lib/org";
 import { getStripe } from "@/lib/stripe";
+import { sendTeamInviteEmail } from "@/lib/emails";
 import {
   fieldErrorsOf,
   orgNameSchema,
   type ActionState,
 } from "@/lib/validation";
 import type { Org } from "@/lib/types";
+
+const inviteSchema = z.object({
+  name: z.string().trim().min(1, "Who are you inviting?").max(120, "Keep the name under 120 characters"),
+  email: z.string().trim().toLowerCase().email("That doesn't look like an email address"),
+});
 
 export async function updateOrgName(
   _prev: ActionState,
@@ -81,4 +88,91 @@ export async function connectStripe(
   }
 
   redirect(onboardingUrl);
+}
+
+export async function inviteTeamMember(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const parsed = inviteSchema.safeParse({
+    name: formData.get("name") ?? "",
+    email: formData.get("email") ?? "",
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrorsOf(parsed.error) };
+
+  const { supabase, user, orgId } = await requireOrg();
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", parsed.data.email)
+    .maybeSingle();
+  if (existing) {
+    return { fieldErrors: { email: "They're already on your team." } };
+  }
+
+  const { data: invite, error } = await supabase
+    .from("invites")
+    .insert({
+      org_id: orgId,
+      email: parsed.data.email,
+      name: parsed.data.name,
+      invited_by: user.id,
+    })
+    .select("token")
+    .single<{ token: string }>();
+
+  if (error || !invite) {
+    if (error?.code === "23505") {
+      return {
+        fieldErrors: {
+          email: "There's already a pending invite for this email — revoke it below to resend.",
+        },
+      };
+    }
+    return { formError: "The invite couldn't be created. Give it another try." };
+  }
+
+  revalidatePath("/settings");
+
+  const { data: org } = await supabase
+    .from("orgs")
+    .select("name")
+    .eq("id", orgId)
+    .single<{ name: string }>();
+
+  try {
+    await sendTeamInviteEmail({
+      to: parsed.data.email,
+      inviteeName: parsed.data.name,
+      orgName: org?.name ?? "your organization",
+      inviteUrl: `${appUrl()}/invite/${invite.token}`,
+    });
+  } catch {
+    return {
+      success:
+        "Invite created, but the email couldn't be sent — copy the invite link below and share it yourself.",
+    };
+  }
+
+  return { success: `Invite sent to ${parsed.data.email}` };
+}
+
+export async function revokeInvite(inviteId: string): Promise<ActionState> {
+  const { supabase } = await requireOrg();
+  const { error } = await supabase.from("invites").delete().eq("id", inviteId);
+  if (error) return { formError: "The invite couldn't be revoked. Give it another try." };
+  revalidatePath("/settings");
+  return { success: "Invite revoked — its link no longer works" };
+}
+
+export async function removeTeamMember(profileId: string): Promise<ActionState> {
+  const { supabase, user } = await requireOrg();
+  if (profileId === user.id) {
+    return { formError: "You can't remove yourself." };
+  }
+  const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+  if (error) return { formError: "They couldn't be removed. Give it another try." };
+  revalidatePath("/settings");
+  return { success: "Team member removed — they no longer have access" };
 }

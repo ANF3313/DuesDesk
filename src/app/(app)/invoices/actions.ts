@@ -141,6 +141,24 @@ export async function createDues(
   };
 }
 
+/** For checks, cash, or Zelle received outside DuesDesk. */
+export async function markPaidOffline(invoiceId: string): Promise<ActionState> {
+  const { supabase } = await requireOrg();
+  const { data, error } = await supabase
+    .from("invoices")
+    .update({ status: "paid", paid_at: new Date().toISOString() })
+    .eq("id", invoiceId)
+    .in("status", ["open", "processing"])
+    .select("id");
+
+  if (error) return { formError: "The invoice couldn't be updated. Give it another try." };
+  if (!data || data.length === 0) {
+    return { formError: "This invoice is already settled." };
+  }
+  refresh();
+  return { success: "Marked paid — recorded as an offline payment" };
+}
+
 export async function voidInvoice(invoiceId: string): Promise<ActionState> {
   const { supabase } = await requireOrg();
   const { data, error } = await supabase
