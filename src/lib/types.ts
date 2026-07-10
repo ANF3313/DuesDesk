@@ -28,6 +28,10 @@ export type Unit = {
   member_email: string;
   dues_amount_cents: number;
   portal_token: string;
+  stripe_customer_id: string | null;
+  stripe_payment_method_id: string | null;
+  autopay_enabled: boolean;
+  autopay_label: string | null;
   created_at: string;
 };
 

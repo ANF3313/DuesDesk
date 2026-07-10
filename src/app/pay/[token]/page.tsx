@@ -17,6 +17,8 @@ type PortalUnit = {
   id: string;
   label: string;
   member_name: string;
+  autopay_enabled: boolean;
+  autopay_label: string | null;
   orgs: { name: string; charges_enabled: boolean } | null;
 };
 
@@ -34,6 +36,21 @@ function Banner({ status }: { status?: string }) {
     return (
       <div className="mb-5 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
         Payment canceled — nothing was charged. Your balance is unchanged.
+      </div>
+    );
+  }
+  if (status === "autopay-on") {
+    return (
+      <div className="mb-5 rounded-lg border border-paid-border bg-paid-bg px-4 py-3 text-sm text-paid-fg">
+        <strong className="font-semibold">Autopay is on.</strong> Your recurring
+        dues will charge automatically on their due date — no more reminders.
+      </div>
+    );
+  }
+  if (status === "autopay-off") {
+    return (
+      <div className="mb-5 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+        Autopay is off. You&apos;ll get an email with a pay link when dues are due.
       </div>
     );
   }
@@ -63,7 +80,7 @@ export default async function PortalPage({
   const admin = createAdminClient();
   const { data: unit } = await admin
     .from("units")
-    .select("id, label, member_name, orgs(name, charges_enabled)")
+    .select("id, label, member_name, autopay_enabled, autopay_label, orgs(name, charges_enabled)")
     .eq("portal_token", token)
     .maybeSingle<PortalUnit>();
   if (!unit || !unit.orgs) notFound();
@@ -170,6 +187,40 @@ export default async function PortalPage({
             </p>
           )}
         </div>
+
+        {paymentsLive && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-5 shadow-card">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-neutral-950">
+                {unit.autopay_enabled ? "Autopay is on" : "Never miss a due date"}
+              </p>
+              <p className="mt-0.5 text-[13px] text-neutral-500">
+                {unit.autopay_enabled
+                  ? `Recurring dues charge ${unit.autopay_label ?? "your saved card"} automatically.`
+                  : "Save a card once and recurring dues pay themselves on the due date."}
+              </p>
+            </div>
+            <form method="POST" action="/api/autopay">
+              <input type="hidden" name="token" value={token} />
+              <input
+                type="hidden"
+                name="action"
+                value={unit.autopay_enabled ? "stop" : "start"}
+              />
+              <button
+                type="submit"
+                className={cn(
+                  "rounded-md px-4 py-2 text-[13px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600 focus-visible:ring-offset-2",
+                  unit.autopay_enabled
+                    ? "border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
+                    : "bg-pine-600 text-white hover:bg-pine-700",
+                )}
+              >
+                {unit.autopay_enabled ? "Turn off autopay" : "Set up autopay"}
+              </button>
+            </form>
+          </div>
+        )}
 
         {paidInvoices.length > 0 && (
           <div className="mt-6">

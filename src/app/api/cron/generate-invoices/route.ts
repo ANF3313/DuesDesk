@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addCadence, todayISO } from "@/lib/dates";
 import { sendBoardDigestEmail, sendInvoiceEmail } from "@/lib/emails";
+import { getStripe } from "@/lib/stripe";
 import { appUrl } from "@/lib/org";
 
 /**
@@ -25,13 +26,16 @@ export async function GET(req: Request) {
 
   const { data: schedules, error } = await admin
     .from("dues_schedules")
-    .select("*, units(label, member_name, member_email, portal_token), orgs(name)")
+    .select(
+      "*, units(label, member_name, member_email, portal_token, autopay_enabled, stripe_customer_id, stripe_payment_method_id), orgs(name, stripe_account_id, charges_enabled)",
+    )
     .eq("active", true)
     .lte("next_invoice_date", today);
   if (error) return new NextResponse("Query failed", { status: 500 });
 
   let created = 0;
   let emailed = 0;
+  let autopaid = 0;
 
   for (const s of schedules ?? []) {
     let next: string = s.next_invoice_date;
@@ -60,7 +64,40 @@ export async function GET(req: Request) {
 
       if (inserted && inserted.length > 0) {
         created++;
-        if (s.units && s.orgs) {
+        const invoiceId = inserted[0].id as string;
+
+        // Autopay first: charge the saved card off-session. The webhook
+        // (payment_intent.succeeded) marks it paid and sends the receipt.
+        let charged = false;
+        if (
+          s.units?.autopay_enabled &&
+          s.units.stripe_customer_id &&
+          s.units.stripe_payment_method_id &&
+          s.orgs?.stripe_account_id &&
+          s.orgs.charges_enabled
+        ) {
+          try {
+            await getStripe().paymentIntents.create(
+              {
+                amount: s.amount_cents,
+                currency: String(s.currency).toLowerCase(),
+                customer: s.units.stripe_customer_id,
+                payment_method: s.units.stripe_payment_method_id,
+                off_session: true,
+                confirm: true,
+                metadata: { invoice_id: invoiceId, org_id: s.org_id, autopay: "1" },
+              },
+              { stripeAccount: s.orgs.stripe_account_id },
+            );
+            charged = true;
+            autopaid++;
+          } catch {
+            // Declined or expired card — fall back to the pay-link email;
+            // the payment_intent.payment_failed webhook also notifies them.
+          }
+        }
+
+        if (!charged && s.units && s.orgs) {
           try {
             await sendInvoiceEmail({
               to: s.units.member_email,
@@ -292,5 +329,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ created, emailed, reminded, lateFees, digests });
+  return NextResponse.json({ created, emailed, autopaid, reminded, lateFees, digests });
 }

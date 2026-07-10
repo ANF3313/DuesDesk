@@ -57,6 +57,11 @@ export async function POST(req: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (session.mode === "setup") {
+          // Autopay enrollment: save the card the member just verified.
+          await saveAutopayMethod(admin, session, event.account);
+          break;
+        }
         if (session.payment_status === "paid") {
           // Card (or other instant method): money is confirmed.
           await markPaid(admin, session, "card");
@@ -74,6 +79,20 @@ export async function POST(req: Request) {
       case "checkout.session.async_payment_failed": {
         const session = event.data.object as Stripe.Checkout.Session;
         await markFailed(admin, session);
+        break;
+      }
+      case "payment_intent.succeeded": {
+        // Autopay charges (and a safety net for checkout payments).
+        const pi = event.data.object as Stripe.PaymentIntent;
+        if (pi.metadata?.invoice_id) await markPaidFromIntent(admin, pi);
+        break;
+      }
+      case "payment_intent.payment_failed": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        // Only autopay attempts — checkout failures are messaged by Stripe UI.
+        if (pi.metadata?.autopay === "1" && pi.metadata?.invoice_id) {
+          await notifyAutopayFailure(admin, pi.metadata.invoice_id);
+        }
         break;
       }
       case "account.updated": {
@@ -120,11 +139,10 @@ function paymentIntentIdOf(session: Stripe.Checkout.Session): string {
     : (session.payment_intent?.id ?? session.id);
 }
 
-async function loadInvoice(
+async function loadInvoiceById(
   admin: SupabaseClient,
-  session: Stripe.Checkout.Session,
+  invoiceId: string | null,
 ): Promise<InvoiceForWebhook | null> {
-  const invoiceId = invoiceIdOf(session);
   if (!invoiceId) return null;
   const { data } = await admin
     .from("invoices")
@@ -134,6 +152,114 @@ async function loadInvoice(
     .eq("id", invoiceId)
     .maybeSingle<InvoiceForWebhook>();
   return data;
+}
+
+async function loadInvoice(
+  admin: SupabaseClient,
+  session: Stripe.Checkout.Session,
+): Promise<InvoiceForWebhook | null> {
+  return loadInvoiceById(admin, invoiceIdOf(session));
+}
+
+/** Autopay enrollment: persist the verified card onto the unit. */
+async function saveAutopayMethod(
+  admin: SupabaseClient,
+  session: Stripe.Checkout.Session,
+  account: string | undefined,
+) {
+  const unitId = session.metadata?.unit_id;
+  const setupIntentId =
+    typeof session.setup_intent === "string"
+      ? session.setup_intent
+      : session.setup_intent?.id;
+  if (!unitId || !setupIntentId || !account) return;
+
+  const si = await getStripe().setupIntents.retrieve(
+    setupIntentId,
+    { expand: ["payment_method"] },
+    { stripeAccount: account },
+  );
+  const pm = si.payment_method as Stripe.PaymentMethod | null;
+  if (!pm?.id) return;
+
+  const label = pm.card
+    ? `${pm.card.brand.toUpperCase()} •••• ${pm.card.last4}`
+    : "saved payment method";
+
+  const { error } = await admin
+    .from("units")
+    .update({
+      stripe_payment_method_id: pm.id,
+      autopay_enabled: true,
+      autopay_label: label,
+    })
+    .eq("id", unitId);
+  if (error) throw error;
+}
+
+/** Autopay success (also a harmless duplicate path for checkout payments). */
+async function markPaidFromIntent(
+  admin: SupabaseClient,
+  pi: Stripe.PaymentIntent,
+) {
+  const invoice = await loadInvoiceById(admin, pi.metadata?.invoice_id ?? null);
+  if (!invoice || invoice.status === "paid" || invoice.status === "void") return;
+
+  const now = new Date().toISOString();
+  const method = pi.payment_method_types?.includes("us_bank_account")
+    ? "us_bank_account"
+    : "card";
+
+  const { error: invoiceError } = await admin
+    .from("invoices")
+    .update({ status: "paid", paid_at: now, stripe_payment_intent_id: pi.id })
+    .eq("id", invoice.id);
+  if (invoiceError) throw invoiceError;
+
+  const { error: paymentError } = await admin.from("payments").upsert(
+    {
+      org_id: invoice.org_id,
+      invoice_id: invoice.id,
+      amount_cents: pi.amount_received || invoice.amount_cents,
+      currency: invoice.currency,
+      stripe_payment_intent_id: pi.id,
+      payment_method: method,
+      status: "succeeded",
+      settled_at: now,
+    },
+    { onConflict: "stripe_payment_intent_id" },
+  );
+  if (paymentError) throw paymentError;
+
+  if (invoice.units && invoice.orgs) {
+    try {
+      await sendReceiptEmail({
+        to: invoice.units.member_email,
+        memberName: invoice.units.member_name,
+        orgName: invoice.orgs.name,
+        memo: invoice.memo,
+        amountCents: pi.amount_received || invoice.amount_cents,
+      });
+    } catch {}
+  }
+}
+
+/** Autopay charge declined: tell the member and leave the invoice open. */
+async function notifyAutopayFailure(admin: SupabaseClient, invoiceId: string) {
+  const invoice = await loadInvoiceById(admin, invoiceId);
+  if (!invoice || invoice.status !== "open") return;
+  if (invoice.units && invoice.orgs) {
+    try {
+      await sendPaymentIssueEmail({
+        to: invoice.units.member_email,
+        memberName: invoice.units.member_name,
+        orgName: invoice.orgs.name,
+        memo: invoice.memo,
+        amountCents: invoice.amount_cents,
+        payUrl: `${appUrl()}/pay/${invoice.units.portal_token}`,
+      });
+    } catch {}
+  }
 }
 
 async function markPaid(
