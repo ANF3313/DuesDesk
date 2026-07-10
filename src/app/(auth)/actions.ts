@@ -104,6 +104,27 @@ export async function signIn(
   redirect(next);
 }
 
+export async function sendPasswordReset(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { fieldErrors: { email: "That doesn't look like an email address" } };
+  }
+
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${appUrl()}/reset-password`,
+  });
+
+  // Same reply whether or not the account exists — never leak which
+  // emails have accounts.
+  return {
+    success: "If an account exists for that email, a reset link is on its way. Check your inbox.",
+  };
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();

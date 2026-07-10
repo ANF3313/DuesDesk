@@ -51,6 +51,14 @@ export function SignInForm({
           error={state.fieldErrors?.password}
           required
         />
+        <div className="-mt-2 text-right">
+          <Link
+            href="/forgot-password"
+            className="text-[13px] font-medium text-pine-600 hover:text-pine-700"
+          >
+            Forgot password?
+          </Link>
+        </div>
         {state.formError && (
           <p role="alert" className="rounded-md bg-overdue-bg px-3 py-2 text-[13px] text-overdue-fg">
             {state.formError}

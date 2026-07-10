@@ -48,7 +48,7 @@ function Header() {
             href="/sign-up"
             className="rounded-md bg-pine-600 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-pine-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600 focus-visible:ring-offset-2"
           >
-            Get started
+            Start free trial
           </Link>
         </div>
       </Container>
@@ -154,27 +154,6 @@ const TIERS = [
   },
 ];
 
-const QUOTES = [
-  {
-    quote:
-      "I used to spend the first weekend of every month matching Zelle screenshots to a spreadsheet. Now I open the dashboard, see green, and close the laptop.",
-    name: "HOA treasurer",
-    detail: "24-unit community",
-  },
-  {
-    quote:
-      "The pay link is the whole product. Our oldest resident is 84 and she paid her assessment from her phone without calling me once.",
-    name: "Condo board president",
-    detail: "38-unit association",
-  },
-  {
-    quote:
-      "Rent and dues land in my account, the invoice marks itself paid, and my tenants stopped asking me for my Venmo.",
-    name: "Independent landlord",
-    detail: "7 doors",
-  },
-];
-
 const FAQS = [
   {
     q: "Where does the money actually go?",
@@ -229,7 +208,7 @@ export default function LandingPage() {
                 href="/sign-up"
                 className="inline-flex h-11 items-center gap-2 rounded-md bg-pine-600 px-5 text-[15px] font-medium text-white transition-colors hover:bg-pine-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600 focus-visible:ring-offset-2"
               >
-                Start collecting dues
+                Start free trial
                 <IconArrowRight width={16} height={16} />
               </Link>
               <a
@@ -239,15 +218,34 @@ export default function LandingPage() {
                 See pricing
               </a>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-[13px] text-neutral-500">
-              <IconShield width={15} height={15} className="text-pine-600" />
-              Payments by Stripe. Money settles to your bank — never ours.
-            </p>
-            <p className="mt-1.5 text-[13px] text-neutral-500">
+            <p className="mt-5 text-[13px] text-neutral-500">
               Free for 14 days · No card required · Cancel anytime
             </p>
           </div>
           <DashboardMock />
+        </Container>
+      </section>
+
+      {/* Trust strip — plain and static, no motion */}
+      <section aria-label="Trust and security" className="border-b border-neutral-200/70 bg-white">
+        <Container className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 py-4">
+          {[
+            [IconShield, "Payments secured by Stripe"],
+            [IconCheck, "Bank-level encryption"],
+            [IconBanknote, "Your money never touches DuesDesk"],
+            [IconBuilding, "Each community's data fully isolated"],
+          ].map(([Icon, label]) => {
+            const IconComp = Icon as typeof IconShield;
+            return (
+              <span
+                key={label as string}
+                className="flex items-center gap-1.5 text-[13px] text-neutral-500"
+              >
+                <IconComp width={14} height={14} className="text-pine-600" />
+                {label as string}
+              </span>
+            );
+          })}
         </Container>
       </section>
 
@@ -350,36 +348,45 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <p className="mt-6 text-[13px] text-neutral-500">
-            Stripe&apos;s processing fees apply to member payments and go to Stripe,
-            not DuesDesk. Bank (ACH) payments cost members ~0.8%, capped at $5.
-          </p>
+          <div className="mt-8 max-w-3xl rounded-lg border border-pine-200 bg-pine-50 px-5 py-4">
+            <p className="text-sm font-semibold text-pine-900">
+              What does it cost your members to pay?
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-pine-800">
+              Bank (ACH) payments cost ~0.8% capped at $5 — about $2.80 on $350
+              dues. Cards run ~2.9% + 30¢. Members pick at checkout, and the
+              fees go to Stripe, not DuesDesk.
+            </p>
+          </div>
         </Container>
       </section>
 
-      {/* Social proof */}
+      {/* Product proof — real UI, honest early-access status.
+          TODO: replace the mock below with real screenshots (e.g.
+          /public/screenshots/dashboard.png rendered via next/image) once
+          captured from the live app with the Maple Court demo data.
+          TODO: when the first pilot customer signs off, add their quote
+          here with a real name and community. */}
       <section className="border-y border-neutral-200/70 bg-white py-16 md:py-20">
         <Container>
-          <h2 className="font-display text-3xl font-medium tracking-tight text-neutral-950 md:text-4xl">
-            Made for the person stuck holding the spreadsheet
-          </h2>
-          <div className="mt-10 grid gap-5 md:grid-cols-3">
-            {QUOTES.map((q) => (
-              <figure key={q.name} className="rounded-lg border border-neutral-200 bg-neutral-25 p-5">
-                <blockquote className="font-display text-[17px] leading-relaxed text-neutral-800">
-                  “{q.quote}”
-                </blockquote>
-                <figcaption className="mt-4 text-[13px]">
-                  <span className="font-medium text-neutral-950">{q.name}</span>
-                  <span className="text-neutral-500"> · {q.detail}</span>
-                </figcaption>
-              </figure>
-            ))}
+          <div className="max-w-xl">
+            <h2 className="font-display text-3xl font-medium tracking-tight text-neutral-950 md:text-4xl">
+              See exactly what your board sees
+            </h2>
+            <p className="mt-3 text-neutral-600">
+              No demo call, no sales deck — this is the treasurer&apos;s actual
+              view: who&apos;s paid, who&apos;s behind, and what it all adds up to.
+            </p>
           </div>
-          <p className="mt-5 text-[13px] text-neutral-500">
-            Illustrative scenarios from our pilot research — early-access spots
-            are open, and the next success story could be yours.
-          </p>
+          <div className="mx-auto mt-10 max-w-3xl">
+            <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 md:p-4">
+              <DashboardMock />
+            </div>
+            <p className="mt-3 text-center text-[13px] text-neutral-500">
+              The dues dashboard · DuesDesk is in pilot testing now — early-access
+              spots are open.
+            </p>
+          </div>
         </Container>
       </section>
 
@@ -421,7 +428,7 @@ export default function LandingPage() {
             href="/sign-up"
             className="mt-8 inline-flex h-11 items-center gap-2 rounded-md bg-white px-6 text-[15px] font-medium text-pine-900 transition-colors hover:bg-pine-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-pine-950"
           >
-            Get started free
+            Start free trial
             <IconArrowRight width={16} height={16} />
           </Link>
         </Container>

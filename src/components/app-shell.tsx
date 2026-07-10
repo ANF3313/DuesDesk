@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { Logo } from "./logo";
 import { signOut } from "@/app/(auth)/actions";
@@ -14,6 +15,7 @@ import {
   IconReceipt,
   IconSettings,
   IconWallet,
+  IconX,
 } from "./ui/icons";
 
 const NAV = [
@@ -38,6 +40,13 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  // Calm setup nudge, dismissible for the session. Starts hidden so the
+  // server and first client render agree; appears after hydration.
+  const [nudgeDismissed, setNudgeDismissed] = useState(true);
+  useEffect(() => {
+    setNudgeDismissed(sessionStorage.getItem("dd-stripe-nudge") === "1");
+  }, []);
 
   const navLinks = (compact: boolean) =>
     NAV.map(({ href, label, icon: Icon }) => {
@@ -116,18 +125,29 @@ export function AppShell({
           </nav>
         </header>
 
-        {!chargesEnabled && pathname !== "/settings" && (
-          <div className="border-b border-pending-border bg-pending-bg px-4 py-2.5 lg:px-8">
-            <p className="text-[13px] text-pending-fg">
-              Payments aren&apos;t live yet — connect your Stripe account so members can
-              pay online.{" "}
+        {!chargesEnabled && !nudgeDismissed && pathname !== "/settings" && (
+          <div className="flex items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 print:hidden lg:px-8">
+            <p className="text-[13px] text-neutral-600">
+              One step left before members can pay online:{" "}
               <Link
                 href="/settings"
-                className="font-semibold underline underline-offset-2 hover:opacity-80"
+                className="font-medium text-pine-700 underline underline-offset-2 hover:text-pine-800"
               >
-                Connect Stripe
+                connect your Stripe account
               </Link>
+              .
             </p>
+            <button
+              type="button"
+              aria-label="Dismiss for now"
+              className="rounded p-1 text-neutral-400 transition-colors hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600"
+              onClick={() => {
+                sessionStorage.setItem("dd-stripe-nudge", "1");
+                setNudgeDismissed(true);
+              }}
+            >
+              <IconX width={14} height={14} />
+            </button>
           </div>
         )}
 
