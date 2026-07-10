@@ -185,11 +185,11 @@ const FAQS = [
 ];
 
 export default function LandingPage() {
-  // Drop a real capture at public/screenshots/dashboard.png and the
-  // product-proof section swaps to it automatically on the next deploy.
-  const hasScreenshot = existsSync(
-    join(process.cwd(), "public", "screenshots", "dashboard.png"),
-  );
+  // Real captures swap in automatically: dashboard.png (treasurer view)
+  // wins if present, otherwise portal.png (member pay page).
+  const shotsDir = join(process.cwd(), "public", "screenshots");
+  const hasDashboardShot = existsSync(join(shotsDir, "dashboard.png"));
+  const hasPortalShot = existsSync(join(shotsDir, "portal.png"));
 
   return (
     <div className="bg-neutral-25">
@@ -389,7 +389,7 @@ export default function LandingPage() {
           </div>
           <div className="mx-auto mt-10 max-w-3xl">
             <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 md:p-4">
-              {hasScreenshot ? (
+              {hasDashboardShot ? (
                 <Image
                   src="/screenshots/dashboard.png"
                   alt="The DuesDesk dashboard: collected and outstanding totals, and every invoice's payment status at a glance"
@@ -397,13 +397,25 @@ export default function LandingPage() {
                   height={900}
                   className="h-auto w-full rounded-lg border border-neutral-200"
                 />
+              ) : hasPortalShot ? (
+                <Image
+                  src="/screenshots/portal.png"
+                  alt="A member's pay page: their balance, an overdue invoice with a Pay now button, and one-click autopay enrollment"
+                  width={1280}
+                  height={600}
+                  className="h-auto w-full rounded-lg border border-neutral-200"
+                />
               ) : (
                 <DashboardMock />
               )}
             </div>
             <p className="mt-3 text-center text-[13px] text-neutral-500">
-              The dues dashboard · DuesDesk is in pilot testing now — early-access
-              spots are open.
+              {hasDashboardShot
+                ? "The treasurer's dashboard"
+                : hasPortalShot
+                  ? "What your members see — open the link, tap, paid"
+                  : "The dues dashboard"}
+              {" "}· DuesDesk is in pilot testing now — early-access spots are open.
             </p>
           </div>
         </Container>
