@@ -93,6 +93,17 @@ function ImportModal({ onClose }: { onClose: () => void }) {
             }}
           />
         </label>
+        <p className="text-[13px] text-neutral-500">
+          Starting from scratch?{" "}
+          <a
+            href="/import-template.csv"
+            download
+            className="font-medium text-pine-600 hover:text-pine-700"
+          >
+            Download our template
+          </a>{" "}
+          and fill it in.
+        </p>
         {error && (
           <p role="alert" className="rounded-md bg-overdue-bg px-3 py-2 text-[13px] text-overdue-fg">
             {error}

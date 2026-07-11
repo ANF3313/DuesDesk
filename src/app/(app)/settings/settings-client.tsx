@@ -378,7 +378,9 @@ export function SettingsClient({
             Each unit has a private pay link (find it on the Units page). Members
             see only their own balance and pay without creating an account. If a
             link ends up in the wrong hands, reset it from the unit&apos;s edit
-            screen.
+            screen. And when your board changes hands, nothing is lost — records
+            belong to the organization: invite the incoming treasurer above,
+            remove the outgoing one, and the full history carries over.
           </p>
         </CardBody>
       </Card>

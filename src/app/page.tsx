@@ -128,7 +128,7 @@ const FEATURES = [
   },
   {
     icon: IconBuilding,
-    title: "Built for under 50 units",
+    title: "Built for up to 150 units — and beyond",
     body: "Dues, expenses, and annual-meeting reports for self-managed HOAs and small landlords — without the property-manager bloat.",
   },
 ];
@@ -189,6 +189,22 @@ const FAQS = [
     q: "Is our data separated from other organizations?",
     a: "Yes, at the database level. Every record is isolated per organization with PostgreSQL row-level security — the same isolation model used by banking software — so one community's data is invisible to every other.",
   },
+  {
+    q: "Do you ever hold our money?",
+    a: "Never. Payments run through your organization's own Stripe account and settle directly to your bank. DuesDesk has no access to your funds at any point — we're software, not a middleman.",
+  },
+  {
+    q: "What happens when our treasurer or board changes?",
+    a: "Nothing is lost. All records belong to the organization, not a person — invite the incoming treasurer from Settings → Team, remove the outgoing one, and the full history, reports, and payment records carry straight over.",
+  },
+  {
+    q: "Can we export our data?",
+    a: "Anytime. Invoices, expenses, and financial summaries export to CSV (Excel-ready) with one click from the Reports page, and everything is encrypted in transit and at rest. Your community's records are yours.",
+  },
+  {
+    q: "What if we have more than 150 units?",
+    a: "That's our Enterprise plan — custom pricing with hands-on data migration and dedicated support. Start a trial and reach out, or contact us and we'll set it up with you.",
+  },
 ];
 
 export default function LandingPage() {
@@ -217,7 +233,8 @@ export default function LandingPage() {
             <p className="mt-5 max-w-md text-base leading-relaxed text-neutral-600 md:text-lg">
               DuesDesk invoices your members, takes their payment online, and
               keeps the books — so nobody has to chase a neighbor for money
-              again.
+              again. Every dollar settles straight to your community&apos;s
+              bank. We never touch it.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -312,6 +329,80 @@ export default function LandingPage() {
         </Container>
       </section>
 
+      {/* How your money flows */}
+      <section className="py-16 md:py-20">
+        <Container>
+          <div className="max-w-xl">
+            <h2 className="font-display text-3xl font-medium tracking-tight text-neutral-950 md:text-4xl">
+              Your money never passes through us
+            </h2>
+            <p className="mt-3 text-neutral-600">Three steps, zero middlemen.</p>
+          </div>
+          <div className="mt-10 grid items-center gap-4 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+            {[
+              [IconLink, "Member pays", "They open their private link and pay by card or bank — no account, no app."],
+              [IconShield, "Stripe processes it", "The same payment company behind Amazon and Shopify verifies and moves the money."],
+              [IconBanknote, "Your bank receives it", "Funds settle directly in your organization's account, and the invoice marks itself paid."],
+            ].map(([Icon, title, body], i) => {
+              const IconComp = Icon as typeof IconShield;
+              return (
+                <div key={title as string} className="contents">
+                  {i > 0 && (
+                    <IconArrowRight
+                      width={20}
+                      height={20}
+                      aria-hidden="true"
+                      className="mx-auto hidden text-neutral-300 md:block"
+                    />
+                  )}
+                  <div className="rounded-lg border border-neutral-200 bg-white p-5 shadow-card">
+                    <span className="flex size-9 items-center justify-center rounded-md bg-pine-50 text-pine-600">
+                      <IconComp width={18} height={18} />
+                    </span>
+                    <h3 className="mt-3.5 text-[15px] font-semibold text-neutral-950">
+                      {title as string}
+                    </h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                      {body as string}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-6 text-[13px] text-neutral-500">
+            DuesDesk never holds, routes, or touches your community&apos;s funds —
+            and every payment reconciles itself into an audit trail your next
+            board will thank you for.
+          </p>
+        </Container>
+      </section>
+
+      {/* Founder's note + charter program */}
+      <section className="border-y border-neutral-200/70 bg-white py-14 md:py-16">
+        <Container className="max-w-3xl">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-pine-600">
+            A note from the founder
+          </h2>
+          <p className="mt-4 font-display text-xl leading-relaxed text-neutral-800 md:text-2xl">
+            I started DuesDesk after watching volunteer treasurers spend their
+            weekends matching payment screenshots against spreadsheets.
+            Communities this size deserve real tools without property-manager
+            prices.
+          </p>
+          <p className="mt-4 text-[15px] leading-relaxed text-neutral-600">
+            Two promises: your money settles straight to your community&apos;s
+            bank — I never hold a cent of it — and when you contact support, a
+            founder answers. We&apos;re inviting our first 50 charter
+            communities right now: founding members lock in 40% off for life
+            and a direct line to us while we build around their feedback.
+          </p>
+          <p className="mt-5 text-sm font-medium text-neutral-950">
+            — Aiden, founder of DuesDesk
+          </p>
+        </Container>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="scroll-mt-16 py-16 md:py-24">
         <Container>
@@ -333,7 +424,11 @@ export default function LandingPage() {
               Solo $12 · Community $29 · Professional $59.
             </p>
           </div>
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <p className="mt-5 text-[13px] text-neutral-500">
+            Which plan? Count your doors: 10 or fewer → Solo · up to 40 →
+            Community · up to 150 → Professional · more than that → Enterprise.
+          </p>
+          <div className="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {TIERS.map((tier) => (
               <div
                 key={tier.name}
