@@ -138,21 +138,28 @@ const TIERS = [
     name: "Solo",
     price: "$19",
     blurb: "For landlords with a handful of doors.",
-    features: ["Up to 10 units", "Recurring dues + member autopay", "Card and bank (ACH) payments", "Expense tracking and reports"],
+    features: ["Up to 10 units", "Payments, autopay, and auto-reminders", "Recurring + one-time invoicing", "Expense tracking and reports"],
     featured: false,
   },
   {
     name: "Community",
     price: "$49",
     blurb: "For self-managed HOAs and condo boards.",
-    features: ["Up to 50 units", "Everything in Solo", "Announcement emails", "Priority support"],
+    features: ["Up to 40 units", "Everything in Solo", "Announcements and board digest", "Team access and late fees", "Priority support"],
     featured: true,
   },
   {
-    name: "Concierge",
+    name: "Professional",
     price: "$99",
-    blurb: "For portfolios and larger communities.",
-    features: ["Up to 150 units", "Everything in Community", "Hands-on onboarding", "Data import help"],
+    blurb: "For larger communities that want help.",
+    features: ["Up to 150 units", "Everything in Community", "Spreadsheet import and migration help", "Hands-on onboarding"],
+    featured: false,
+  },
+  {
+    name: "Enterprise",
+    price: "$199+",
+    blurb: "For 150+ units and property managers.",
+    features: ["150+ units across communities", "Everything in Professional", "Managed multi-community setup", "Dedicated support, custom quote"],
     featured: false,
   },
 ];
@@ -317,7 +324,16 @@ export default function LandingPage() {
               member pay links. Try any plan free for 14 days — no card required.
             </p>
           </div>
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-pine-600 bg-pine-50 px-5 py-3.5">
+            <span className="rounded-full bg-pine-600 px-2.5 py-0.5 text-xs font-medium text-white">
+              Founding member pricing
+            </span>
+            <p className="text-sm text-pine-900">
+              The first 50 customers lock in <strong className="font-semibold">40% off for life</strong>:
+              Solo $12 · Community $29 · Professional $59.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {TIERS.map((tier) => (
               <div
                 key={tier.name}
