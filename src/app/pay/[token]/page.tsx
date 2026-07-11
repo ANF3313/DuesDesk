@@ -180,6 +180,13 @@ export default async function PortalPage({
             </ul>
           )}
 
+          {paymentsLive && openInvoices.some((i) => i.status === "open") && (
+            <p className="mt-4 text-xs text-neutral-400">
+              Online payments include a $1.95 convenience fee, shown at
+              checkout before you confirm.
+            </p>
+          )}
+
           {!paymentsLive && openInvoices.some((i) => i.status === "open") && (
             <p className="mt-4 rounded-md bg-neutral-50 px-3 py-2.5 text-[13px] text-neutral-600">
               Online payment isn&apos;t set up yet. Contact {unit.orgs.name} about

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getStripe } from "@/lib/stripe";
 import { appUrl } from "@/lib/org";
+import { PLATFORM_FEE_CENTS, PLATFORM_FEE_LABEL } from "@/lib/fees";
 
 /**
  * Starts a Stripe Checkout session for one invoice, charged directly on the
@@ -73,11 +74,22 @@ export async function POST(req: Request) {
               },
             },
           },
+          // The platform fee, shown transparently as its own line. The org
+          // still receives the full dues amount.
+          {
+            quantity: 1,
+            price_data: {
+              currency: invoice.currency.toLowerCase(),
+              unit_amount: PLATFORM_FEE_CENTS,
+              product_data: { name: PLATFORM_FEE_LABEL },
+            },
+          },
         ],
         customer_email: unit.member_email,
         client_reference_id: invoice.id,
         metadata: { invoice_id: invoice.id, org_id: unit.org_id },
         payment_intent_data: {
+          application_fee_amount: PLATFORM_FEE_CENTS,
           metadata: { invoice_id: invoice.id, org_id: unit.org_id },
         },
         success_url: `${appUrl()}/pay/${token}?status=success`,

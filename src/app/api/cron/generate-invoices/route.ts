@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addCadence, todayISO } from "@/lib/dates";
 import { sendBoardDigestEmail, sendInvoiceEmail } from "@/lib/emails";
 import { getStripe } from "@/lib/stripe";
+import { PLATFORM_FEE_CENTS } from "@/lib/fees";
 import { appUrl } from "@/lib/org";
 
 /**
@@ -79,7 +80,8 @@ export async function GET(req: Request) {
           try {
             await getStripe().paymentIntents.create(
               {
-                amount: s.amount_cents,
+                amount: s.amount_cents + PLATFORM_FEE_CENTS,
+                application_fee_amount: PLATFORM_FEE_CENTS,
                 currency: String(s.currency).toLowerCase(),
                 customer: s.units.stripe_customer_id,
                 payment_method: s.units.stripe_payment_method_id,

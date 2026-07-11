@@ -164,7 +164,7 @@ const FAQS = [
   },
   {
     q: "What does it cost members to pay?",
-    a: "Stripe's standard processing fees apply — roughly 2.9% + 30¢ for cards, and about 0.8% capped at $5 for bank (ACH) payments. For typical dues amounts, ACH is dramatically cheaper, and members can choose either at checkout.",
+    a: "A $1.95 convenience fee per online payment, plus Stripe's standard processing — roughly 2.9% + 30¢ for cards, or about 0.8% capped at $5 for bank (ACH) payments. On $350 dues, paying by bank is about $4.75 all-in. Everything is itemized at checkout before members confirm, and paying by check stays free.",
   },
   {
     q: "Do members need to create accounts?",
@@ -362,9 +362,10 @@ export default function LandingPage() {
               What does it cost your members to pay?
             </p>
             <p className="mt-1 text-sm leading-relaxed text-pine-800">
-              Bank (ACH) payments cost ~0.8% capped at $5 — about $2.80 on $350
-              dues. Cards run ~2.9% + 30¢. Members pick at checkout, and the
-              fees go to Stripe, not DuesDesk.
+              A $1.95 convenience fee per online payment, plus Stripe&apos;s
+              processing (~0.8% capped at $5 for bank payments — about $4.75
+              all-in on $350 dues; cards run ~2.9% + 30¢). Members see it
+              itemized at checkout, and the board pays nothing extra.
             </p>
           </div>
         </Container>

@@ -220,7 +220,7 @@ async function markPaidFromIntent(
     {
       org_id: invoice.org_id,
       invoice_id: invoice.id,
-      amount_cents: pi.amount_received || invoice.amount_cents,
+      amount_cents: invoice.amount_cents,
       currency: invoice.currency,
       stripe_payment_intent_id: pi.id,
       payment_method: method,
@@ -238,7 +238,7 @@ async function markPaidFromIntent(
         memberName: invoice.units.member_name,
         orgName: invoice.orgs.name,
         memo: invoice.memo,
-        amountCents: pi.amount_received || invoice.amount_cents,
+        amountCents: invoice.amount_cents,
       });
     } catch {}
   }
@@ -286,11 +286,12 @@ async function markPaid(
 
   // Upsert (not insert-ignore): an ACH payment already recorded as
   // "processing" flips to "succeeded" here.
+  // Record the DUES amount (the fee line is platform revenue, not org money).
   const { error: paymentError } = await admin.from("payments").upsert(
     {
       org_id: invoice.org_id,
       invoice_id: invoice.id,
-      amount_cents: session.amount_total ?? invoice.amount_cents,
+      amount_cents: invoice.amount_cents,
       currency: invoice.currency,
       stripe_payment_intent_id: paymentIntentId,
       payment_method: method,
@@ -308,7 +309,7 @@ async function markPaid(
         memberName: invoice.units.member_name,
         orgName: invoice.orgs.name,
         memo: invoice.memo,
-        amountCents: session.amount_total ?? invoice.amount_cents,
+        amountCents: invoice.amount_cents,
       });
     } catch {
       // Receipt email is best-effort; the payment record is what matters.
@@ -339,7 +340,7 @@ async function markProcessing(
     {
       org_id: invoice.org_id,
       invoice_id: invoice.id,
-      amount_cents: session.amount_total ?? invoice.amount_cents,
+      amount_cents: invoice.amount_cents,
       currency: invoice.currency,
       stripe_payment_intent_id: paymentIntentId,
       payment_method: "us_bank_account",
