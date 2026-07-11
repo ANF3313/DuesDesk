@@ -28,6 +28,12 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: IconSettings },
 ];
 
+const NAV_GROUPS: Array<{ label: string | null; hrefs: string[] }> = [
+  { label: null, hrefs: ["/dashboard"] },
+  { label: "Money", hrefs: ["/invoices", "/expenses", "/reports"] },
+  { label: "Community", hrefs: ["/units", "/announcements"] },
+];
+
 export function AppShell({
   orgName,
   email,
@@ -81,23 +87,87 @@ export function AppShell({
       <aside className="hidden w-60 shrink-0 flex-col border-r border-neutral-200 bg-white print:hidden lg:flex">
         <div className="sticky top-0 flex h-dvh flex-col px-4 py-5">
           <Logo href="/dashboard" />
-          <p className="mt-4 truncate rounded-md bg-neutral-50 px-3 py-2 text-[13px] font-medium text-neutral-700">
-            {orgName}
-          </p>
-          <nav aria-label="Main" className="mt-4 space-y-0.5">
-            {navLinks(false)}
+          <nav aria-label="Main" className="mt-5">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label ?? "top"} className="mb-4">
+                {group.label && (
+                  <p className="mb-1 px-3 text-[11px] font-medium uppercase tracking-wider text-neutral-400">
+                    {group.label}
+                  </p>
+                )}
+                <div className="space-y-0.5">
+                  {NAV.filter((n) => group.hrefs.includes(n.href)).map(
+                    ({ href, label, icon: Icon }) => {
+                      const active = pathname.startsWith(href);
+                      return (
+                        <Link
+                          key={href}
+                          href={href}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600",
+                            active
+                              ? "bg-neutral-100 font-medium text-neutral-950"
+                              : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950",
+                          )}
+                        >
+                          <Icon
+                            width={17}
+                            height={17}
+                            className={active ? "text-pine-600" : "text-neutral-400"}
+                          />
+                          {label}
+                        </Link>
+                      );
+                    },
+                  )}
+                </div>
+              </div>
+            ))}
           </nav>
-          <div className="mt-auto border-t border-neutral-100 pt-4">
-            <p className="truncate px-3 text-xs text-neutral-500">{email}</p>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="mt-1.5 flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600"
+          <div className="mt-auto border-t border-neutral-100 pt-3">
+            <Link
+              href="/settings"
+              aria-current={pathname.startsWith("/settings") ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600",
+                pathname.startsWith("/settings")
+                  ? "bg-neutral-100 font-medium text-neutral-950"
+                  : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950",
+              )}
+            >
+              <IconSettings
+                width={17}
+                height={17}
+                className={pathname.startsWith("/settings") ? "text-pine-600" : "text-neutral-400"}
+              />
+              Settings
+            </Link>
+            <div className="mt-2 flex items-center gap-2.5 rounded-md bg-neutral-50 px-3 py-2.5">
+              <span
+                aria-hidden="true"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full bg-pine-600 text-[13px] font-semibold text-white"
               >
-                <IconLogout width={17} height={17} className="text-neutral-400" />
-                Sign out
-              </button>
-            </form>
+                {orgName.charAt(0).toUpperCase()}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-medium text-neutral-950">
+                  {orgName}
+                </span>
+                <span className="block truncate text-xs text-neutral-500">{email}</span>
+              </span>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  aria-label="Sign out"
+                  title="Sign out"
+                  className="rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-neutral-200 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-600"
+                >
+                  <IconLogout width={16} height={16} />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </aside>
@@ -151,7 +221,7 @@ export function AppShell({
           </div>
         )}
 
-        <main className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8">
+        <main className="mx-auto w-full max-w-[1440px] px-4 py-6 md:px-8 md:py-7">
           {children}
         </main>
       </div>
